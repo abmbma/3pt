@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f0f2f5;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .simulation-area {
+            position: relative;
+            height: 400px;
+            background: #e6f3ff;
+            border-radius: 8px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+
+        .antenna {
+            position: absolute;
+            bottom: 20px;
+            left: 50px;
+            width: 40px;
+            height: 100px;
+            background: #2563eb;
+            border-radius: 5px;
+        }
+
+        .signal-wave {
+            position: absolute;
+            left: 70px;
+            bottom: 70px;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #2563eb;
+            border-radius: 50%;
+            opacity: 0;
+            animation: wave 3s infinite;
+        }
+
+        .obstacle {
+            position: absolute;
+            background: #4b5563;
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+
+        .obstacle:hover {
+            transform: scale(1.05);
+        }
+
+        .signal-strength {
+            position: absolute;
+            right: 20px;
+            top: 20px;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .strength-bar {
+            width: 200px;
+            height: 20px;
+            background: #e5e7eb;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .strength-fill {
+            height: 100%;
+            background: #2563eb;
+            transition: width 0.3s;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .control-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background: #2563eb;
+            color: white;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .control-btn:hover {
+            background: #1d4ed8;
+        }
+
+        @keyframes wave {
+            0% {
+                width: 20px;
+                height: 20px;
+                opacity: 1;
+            }
+            100% {
+                width: 800px;
+                height: 800px;
+                opacity: 0;
+            }
+        }
+
+        .impact-point {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: #ef4444;
+            border-radius: 50%;
+            opacity: 0;
+        }
+
+        .impact-animation {
+            animation: impact 0.5s forwards;
+        }
+
+        @keyframes impact {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(2);
+                opacity: 0;
+            }
+        }
+
+        .info-panel {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+
+        .antenna-type {
+            position: absolute;
+            left: 20px;
+            top: 20px;
+            background: white;
+            padding: 10px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+
+        .signal-type {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .type-btn {
+            padding: 10px 20px;
+            border: 2px solid #2563eb;
+            border-radius: 5px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .type-btn.active {
+            background: #2563eb;
+            color: white;
+        }
+
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .metric-card {
+            background: #f8fafc;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Simulador de Pérdida de Señal: MIMO vs BTS</h1>
+
+        <div class="signal-type">
+            <button class="type-btn active" onclick="changeType('mimo')">Antena MIMO</button>
+            <button class="type-btn" onclick="changeType('bts')">Antena BTS</button>
+        </div>
+
+        <div class="simulation-area">
+            <div class="antenna-type">MIMO</div>
+            <div class="antenna"></div>
+            <div class="signal-wave"></div>
+            <div class="signal-wave" style="animation-delay: 1s"></div>
+            <div class="signal-wave" style="animation-delay: 2s"></div>
+
+            <div class="signal-strength">
+                Fuerza de Señal:
+                <div class="strength-bar">
+                    <div class="strength-fill" style="width: 100%"></div>
+                </div>
+                <div id="strength-value">100%</div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="control-btn" onclick="addObstacle('mountain')">Añadir Montaña</button>
+            <button class="control-btn" onclick="addObstacle('building')">Añadir Edificio</button>
+            <button class="control-btn" onclick="addObstacle('tree')">Añadir Árbol</button>
+            <button class="control-btn" onclick="clearObstacles()">Limpiar</button>
+        </div>
+
+        <div class="metrics">
+            <div class="metric-card">
+                <h3>MIMO</h3>
+                <p>Pérdida por Montaña: -15%</p>
+                <p>Pérdida por Edificio: -10%</p>
+                <p>Pérdida por Árbol: -5%</p>
+            </div>
+            <div class="metric-card">
+                <h3>BTS</h3>
+                <p>Pérdida por Montaña: -30%</p>
+                <p>Pérdida por Edificio: -20%</p>
+                <p>Pérdida por Árbol: -10%</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentType = 'mimo';
+        let signalStrength = 100;
+        let obstacles = [];
+
+        const losses = {
+            mimo: {
+                mountain: 15,
+                building: 10,
+                tree: 5
+            },
+            bts: {
+                mountain: 30,
+                building: 20,
+                tree: 10
+            }
+        };
+
+        function changeType(type) {
+            currentType = type;
+            document.querySelector('.antenna-type').textContent = type.toUpperCase();
+            document.querySelectorAll('.type-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.textContent.toLowerCase().includes(type));
+            });
+            updateSignalStrength();
+        }
+
+        function addObstacle(type) {
+            const obstacle = document.createElement('div');
+            obstacle.className = 'obstacle';
+            
+            // Establecer estilo según tipo
+            switch(type) {
+                case 'mountain':
+                    obstacle.style.width = '80px';
+                    obstacle.style.height = '80px';
+                    obstacle.style.clipPath = 'polygon(50% 0%, 0% 100%, 100% 100%)';
+                    break;
+                case 'building':
+                    obstacle.style.width = '40px';
+                    obstacle.style.height = '100px';
+                    break;
+                case 'tree':
+                    obstacle.style.width = '40px';
+                    obstacle.style.height = '60px';
+                    obstacle.style.borderRadius = '50% 50% 0 0';
+                    break;
+            }
+
+            // Posición aleatoria
+            const x = Math.random() * 600 + 200;
+            const y = Math.random() * 200 + 100;
+            obstacle.style.left = x + 'px';
+            obstacle.style.top = y + 'px';
+
+            obstacle.dataset.type = type;
+            document.querySelector('.simulation-area').appendChild(obstacle);
+            obstacles.push({ element: obstacle, type });
+            
+            showImpact(x, y);
+            updateSignalStrength();
+        }
+
+        function showImpact(x, y) {
+            const impact = document.createElement('div');
+            impact.className = 'impact-point impact-animation';
+            impact.style.left = x + 'px';
+            impact.style.top = y + 'px';
+            document.querySelector('.simulation-area').appendChild(impact);
+            
+            setTimeout(() => impact.remove(), 500);
+        }
+
+        function updateSignalStrength() {
+            signalStrength = 100;
+            obstacles.forEach(obstacle => {
+                signalStrength -= losses[currentType][obstacle.type];
+            });
+            signalStrength = Math.max(0, signalStrength);
+
+            document.querySelector('.strength-fill').style.width = signalStrength + '%';
+            document.getElementById('strength-value').textContent = Math.round(signalStrength) + '%';
+        }
+
+        function clearObstacles() {
+            obstacles.forEach(obstacle => obstacle.element.remove());
+            obstacles = [];
+            updateSignalStrength();
+        }
+
+        // Animación inicial de ondas
+        setInterval(() => {
+            const wave = document.createElement('div');
+            wave.className = 'signal-wave';
+            document.querySelector('.simulation-area').appendChild(wave);
+            setTimeout(() => wave.remove(), 3000);
+        }, 3000);
+    </script>
+</body>
+</html>
